@@ -1,0 +1,15 @@
+node_modules/
+.env
+.env.local
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+data/
+client/dist/
+.DS_Store
+.vite/
+dist/
+.claude/
+archive/
+NEW FORMAT.PNG
