@@ -60,18 +60,10 @@ const TEAMS = [
 ];
 
 // Five 18-hole scramble groups per team; ALL five groups count toward cumulative stroke play.
-const SESSIONS = [
-  {
-    name: 'Scramble',
-    matches: [
-      { format: 'scramble', team_a_size: 4, team_b_size: 4, points_weight: 1, holes_count: 18 },
-      { format: 'scramble', team_a_size: 4, team_b_size: 4, points_weight: 1, holes_count: 18 },
-      { format: 'scramble', team_a_size: 4, team_b_size: 4, points_weight: 1, holes_count: 18 },
-      { format: 'scramble', team_a_size: 4, team_b_size: 4, points_weight: 1, holes_count: 18 },
-      { format: 'scramble', team_a_size: 4, team_b_size: 3, points_weight: 1, holes_count: 18 },
-    ],
-  },
-];
+const SESSIONS = [{ name: '18-Hole Scramble Groups', matches: [
+  ...Array.from({length: 5}, () => ({format:'scramble',team_a_size:4,team_b_size:0,points_weight:0,holes_count:18})),
+  ...Array.from({length: 5}, (_,i) => ({format:'scramble',team_a_size:0,team_b_size:i===4?3:4,points_weight:0,holes_count:18})),
+]}];
 
 export function seedIfEmpty() {
   const tournamentCount = db.prepare('SELECT COUNT(*) AS c FROM tournament').get().c;
@@ -173,4 +165,25 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   console.log(seeded ? 'Seeded.' : 'Already seeded; no changes.');
   if (mig.migrated) console.log('Wiped and reseeded with the Transy scramble format.');
   else if (mig.reason) console.log(`Migration skipped: ${mig.reason}.`);
+}
+
+// Convert a clean five-match setup to ten independent scorecards without deleting players.
+// Existing scores are NEVER discarded or automatically migrated.
+export function splitGroupsIfUnscored() {
+  const matches = db.prepare('SELECT * FROM match ORDER BY display_order').all();
+  if (matches.length !== 5 || !matches.every(m => m.team_a_size === 4 && m.team_b_size > 0)) return { converted:false };
+  if (db.prepare('SELECT COUNT(*) AS n FROM hole_result').get().n > 0) {
+    console.warn('OLD FORMAT HAS SCORES: back up database, then use admin factory reset to enable 10 independent groups.');
+    return {converted:false, reason:'existing scores require manual reset'};
+  }
+  const tx=db.transaction(()=>{
+    const insert=db.prepare(`INSERT INTO match (session_id,format,team_a_size,team_b_size,start_hole,status,points_weight,sudden_death,holes_count,display_order) VALUES (?,?,?,?,?,'pending',0,0,18,?)`);
+    for (const [i,m] of matches.entries()) {
+      insert.run(m.session_id,'scramble',0,m.team_b_size,m.start_hole,i+6);
+      const newId=Number(db.prepare('SELECT last_insert_rowid() AS id').get().id);
+      db.prepare('UPDATE match_player SET match_id = ? WHERE match_id = ? AND side = ?').run(newId,m.id,'B');
+      db.prepare("UPDATE match SET team_b_size=0,points_weight=0,status='pending',display_order=? WHERE id=?").run(i+1,m.id);
+    }
+  });
+  tx();return {converted:true};
 }

@@ -13,7 +13,7 @@ export function recomputeMatch(matchId) {
 
   const suddenDeath = !!match.sudden_death;
   const holesCount = match.holes_count ?? 9;
-  const computed = computeStrokePlay(holes, holesCount);
+  const computed = computeStrokePlay(holes, holesCount, match.team_a_size > 0 ? 'A' : 'B');
   const pts = {a:0,b:0};
 
   let status = match.status;
@@ -82,7 +82,7 @@ export function getFullState() {
     const holes = matchHoles.all(m.id);
     const matchSuddenDeath = !!m.sudden_death;
     const holesCount = m.holes_count ?? 9;
-    const computed = computeStrokePlay(holes, holesCount);
+    const computed = computeStrokePlay(holes, holesCount, m.team_a_size > 0 ? 'A' : 'B');
     const maxHoleIndex = holes.length
       ? Math.max(...holes.map((h) => h.hole_index))
       : -1;
@@ -104,6 +104,8 @@ export function getFullState() {
       id: m.id,
       sessionId: m.session_id,
       format: m.format,
+      groupSide: m.team_a_size > 0 ? 'A' : 'B',
+      groupNumber: m.team_a_size > 0 ? m.display_order : m.display_order - 5,
       teamASize: m.team_a_size,
       teamBSize: m.team_b_size,
       startHole: m.start_hole,
@@ -149,9 +151,7 @@ export function getFullState() {
 
   const teams = teamsRaw.map((t, i) => {
     const side = i === 0 ? 'A' : 'B';
-    const totalPoints = matchOut.reduce(
-      (sum,m)=>sum+(side==='A'?m.computed.aToPar:m.computed.bToPar),0
-    );
+    const totalPoints = matchOut.filter(m=>m.groupSide===side).reduce((sum,m)=>sum+m.computed.toPar,0);
     return {
       id: t.id,
       name: t.name,
@@ -184,7 +184,7 @@ export function getFullState() {
   const tournamentFinal = allMatchesFinal;
 
   const bets = {bettors:[], bets:[]};
-  const activity = buildActivity(matchOut);
+  const activity = [];
 
   return {
     tournament: {

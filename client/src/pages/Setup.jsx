@@ -25,7 +25,7 @@ function SetupInner({ state, isAdmin, onLogout }) {
         <div>
           <div className="text-sm font-semibold">Scorekeeper</div>
           <div className="text-xs text-ink/60">
-            Set handicaps, lineups + starting holes per match.
+            Assign each foursome and its starting hole.
           </div>
         </div>
         <button className="btn" onClick={onLogout}>Lock</button>
@@ -136,7 +136,7 @@ function SetupRow({ match, teamA, teamB, isOpen, onToggle }) {
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="pill-muted">{FORMAT_LABEL[match.format]}</span>
-            <span className="pill-muted">{match.teamASize}v{match.teamBSize}</span>
+            <span className="pill-muted">{match.groupSide === 'A' ? 'Black' : 'Crimson'} Group {match.groupNumber}</span>
             {match.startHole && <span className="pill-muted">Hole {match.startHole}</span>}
             <span className="pill-muted">{match.status}</span>
           </div>
@@ -144,7 +144,7 @@ function SetupRow({ match, teamA, teamB, isOpen, onToggle }) {
             <span className="font-medium" style={{ color: teamA.color }}>
               {summarize(match.sideA) || '—'}
             </span>
-            <span className="text-ink/40"> vs </span>
+            <span className="text-ink/40"> </span>
             <span className="font-medium" style={{ color: teamB.color }}>
               {summarize(match.sideB) || '—'}
             </span>
@@ -180,8 +180,8 @@ function SetupRow({ match, teamA, teamB, isOpen, onToggle }) {
             </div>
           </div>
 
-          <PlayerPicker team={teamA} limit={match.teamASize} selected={aSel} onChange={setASel} disabled={locked} />
-          <PlayerPicker team={teamB} limit={match.teamBSize} selected={bSel} onChange={setBSel} disabled={locked} />
+          {match.teamASize > 0 && <PlayerPicker team={teamA} limit={match.teamASize} selected={aSel} onChange={setASel} disabled={locked} />}
+          {match.teamBSize > 0 && <PlayerPicker team={teamB} limit={match.teamBSize} selected={bSel} onChange={setBSel} disabled={locked} />}
 
           {err && <div className="text-flag text-sm">{err}</div>}
 
@@ -196,7 +196,7 @@ function SetupRow({ match, teamA, teamB, isOpen, onToggle }) {
                   onClick={start}
                   disabled={busy || locked || !aOk || !bOk}
                 >
-                  Start match
+                  Start group
                 </button>
               </>
             )}
@@ -211,7 +211,7 @@ function SetupRow({ match, teamA, teamB, isOpen, onToggle }) {
                 onClick={resetMatch}
                 disabled={busy}
               >
-                Reset match
+                Reset group
               </button>
             )}
           </div>

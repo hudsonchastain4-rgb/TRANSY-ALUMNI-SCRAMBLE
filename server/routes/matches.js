@@ -152,16 +152,18 @@ router.post('/:id/hole', requirePin, (req, res) => {
   } else {
     teamAScore = req.body.teamAScore;
     teamBScore = req.body.teamBScore;
-    if (!Number.isInteger(teamAScore) || !Number.isInteger(teamBScore)) {
+    if (match.team_a_size > 0 && !Number.isInteger(teamAScore) || match.team_b_size > 0 && !Number.isInteger(teamBScore)) {
       return res.status(400).json({ error: 'scores required' });
     }
-    if (teamAScore < 1 || teamBScore < 1) {
+    if ((match.team_a_size > 0 && teamAScore < 1) || (match.team_b_size > 0 && teamBScore < 1)) {
       return res.status(400).json({ error: 'scores must be >= 1' });
     }
   }
 
   const holeNumber = ((match.start_hole - 1 + holeIndex) % HOLES_ON_COURSE) + 1;
-  const winner = teamAScore < teamBScore ? 'A' : teamAScore > teamBScore ? 'B' : 'tie';
+  teamAScore = match.team_a_size > 0 ? teamAScore : null;
+  teamBScore = match.team_b_size > 0 ? teamBScore : null;
+  const winner = match.team_a_size === 0 || match.team_b_size === 0 ? null : teamAScore < teamBScore ? 'A' : teamAScore > teamBScore ? 'B' : 'tie';
 
   const existing = db
     .prepare('SELECT id FROM hole_result WHERE match_id = ? AND hole_index = ?')

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PinGate from './PinGate.jsx';
-import HoleEntry from '../components/HoleEntry.jsx';
+import GroupHoleEntry from '../components/GroupHoleEntry.jsx';
 import BestBallHoleEntry from '../components/BestBallHoleEntry.jsx';
 import { api } from '../lib/api.js';
 import { hexToRgba } from '../lib/colors.js';
@@ -85,7 +85,7 @@ function MatchPicker({ matches, value, onChange }) {
                       : 'border-bunker bg-white text-ink/80'
               }`}
             >
-              <div className="font-semibold">M{m.id}</div>
+              <div className="font-semibold">{m.groupSide === "A" ? "Black" : "Crimson"} {m.groupNumber}</div>
               <div className="text-[10px] uppercase tracking-widest">
                 {live ? 'live' : done ? 'final' : m.startHole ? 'ready' : 'pending'}
               </div>
@@ -151,7 +151,7 @@ function MatchScoring({ state, match }) {
     }
   }
 
-  if (!match.startHole || match.sideA.length === 0 || match.sideB.length === 0) {
+  if (!match.startHole || (match.groupSide === 'A' ? match.sideA.length === 0 : match.sideB.length === 0)) {
     return (
       <div className="card p-4 text-sm text-ink/75">
         Match isn’t set up yet. Open the <span className="font-semibold">Setup</span> tab to assign players and a starting hole.
@@ -159,43 +159,16 @@ function MatchScoring({ state, match }) {
     );
   }
 
-  const leader = c.aToPar < c.bToPar ? a : c.bToPar < c.aToPar ? b : null;
+  const side = match.groupSide;
+  const groupTeam = side === 'A' ? a : b;
+  const groupPlayers = side === 'A' ? match.sideA : match.sideB;
 
   return (
     <div className="space-y-3">
-      <div
-        className="card p-3"
-        style={
-          match.status === 'in_progress' && leader
-            ? { borderColor: hexToRgba(leader.color, 0.45) }
-            : {}
-        }
-      >
-        <div className="flex items-center justify-between text-[11px]">
-          <div className="text-ink/55 uppercase tracking-widest">
-            Group {match.id} · Stroke play scramble
-          </div>
-          <div
-            className="font-semibold"
-            style={leader ? { color: leader.color } : { color: '#2c2418' }}
-          >
-            Black {formatStroke(c.aToPar)} · Crimson {formatStroke(c.bToPar)} · {c.holesPlayed}/18
-          </div>
-        </div>
-        <div className="mt-2 grid grid-cols-2 gap-3">
-          <div>
-            <div className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: a.color }}>
-              {a.name}
-            </div>
-            <div className="text-sm">{match.sideA.map((p) => p.name).join(' / ')}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: b.color }}>
-              {b.name}
-            </div>
-            <div className="text-sm">{match.sideB.map((p) => p.name).join(' / ')}</div>
-          </div>
-        </div>
+      <div className="card p-3 space-y-2">
+        <div className="text-xs uppercase tracking-widest" style={{color:groupTeam.color}}>{groupTeam.name} — Group {match.groupNumber}</div>
+        <div className="text-3xl font-bold">{formatStroke(c.toPar)} <span className="text-sm font-normal">through {c.holesPlayed}/18 holes</span></div>
+        <div className="text-sm">{groupPlayers.map(p=>p.name).join(' / ')}</div>
       </div>
 
       {err && <div className="card border-flag/50 bg-flag/10 text-flag text-sm p-3">{err}</div>}
@@ -207,9 +180,6 @@ function MatchScoring({ state, match }) {
         {playOrder.map((holeNumber, idx) => {
           const has = holesByIndex.has(idx);
           const hole = holesByIndex.get(idx);
-          const winner = hole?.winner;
-          const winColor =
-            winner === 'A' ? a.color : winner === 'B' ? b.color : null;
           return (
             <div
               key={idx}
@@ -220,14 +190,14 @@ function MatchScoring({ state, match }) {
                     ? 'border-bunker bg-white'
                     : 'border-bunker/50 bg-cream-dark/30'
               }`}
-              style={winColor ? { borderColor: hexToRgba(winColor, 0.6) } : undefined}
+              
             >
               <div className="font-semibold text-ink">{holeNumber}</div>
               <div
                 className="text-[10px]"
-                style={winColor ? { color: winColor, fontWeight: 700 } : { color: '#a3a39a' }}
+                
               >
-                {has ? `${hole.teamAScore}/${hole.teamBScore}` : '·'}
+                {has ? (side==='A'?hole.teamAScore:hole.teamBScore) : '·'}
               </div>
             </div>
           );
@@ -237,7 +207,7 @@ function MatchScoring({ state, match }) {
       {match.computed.isClosed ? (
         <div className="card p-4 text-center">
           <div className="text-fairway font-display font-semibold text-lg">
-            Group complete: Black {formatStroke(c.aToPar)} / Crimson {formatStroke(c.bToPar)}
+            Group complete: {formatStroke(c.toPar)}
           </div>
           <button className="btn mt-3" onClick={undoLast} disabled={busy}>
             Undo last hole
@@ -257,8 +227,8 @@ function MatchScoring({ state, match }) {
               holeNumber={playOrder[nextIndex]}
               holeIndex={nextIndex}
               par={state.course?.holes?.[playOrder[nextIndex] - 1]?.par}
-              teamA={a}
-              teamB={b}
+              team={groupTeam}
+              side={side}
               sideA={match.sideA}
               sideB={match.sideB}
               existing={holesByIndex.get(nextIndex)}
@@ -266,13 +236,13 @@ function MatchScoring({ state, match }) {
               disabled={busy}
             />
           ) : (
-            <HoleEntry
+            <GroupHoleEntry
               holesCount={holesCount}
               holeNumber={playOrder[nextIndex]}
               holeIndex={nextIndex}
               par={state.course?.holes?.[playOrder[nextIndex] - 1]?.par}
-              teamA={a}
-              teamB={b}
+              team={groupTeam}
+              side={side}
               existing={holesByIndex.get(nextIndex)}
               onSubmit={submit}
               disabled={busy}
@@ -297,8 +267,8 @@ function MatchScoring({ state, match }) {
                   holeNumber={h.holeNumber}
                   holeIndex={h.holeIndex}
                   par={state.course?.holes?.[h.holeNumber - 1]?.par}
-                  teamA={a}
-                  teamB={b}
+                  team={groupTeam}
+                  side={side}
                   sideA={match.sideA}
                   sideB={match.sideB}
                   existing={h}
@@ -306,14 +276,14 @@ function MatchScoring({ state, match }) {
                   disabled={busy}
                 />
               ) : (
-                <HoleEntry
+                <GroupHoleEntry
                   key={h.id}
                   holesCount={holesCount}
                   holeNumber={h.holeNumber}
                   holeIndex={h.holeIndex}
                   par={state.course?.holes?.[h.holeNumber - 1]?.par}
-                  teamA={a}
-                  teamB={b}
+                  team={groupTeam}
+                  side={side}
                   existing={h}
                   onSubmit={submit}
                   disabled={busy}
