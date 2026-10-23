@@ -5,6 +5,7 @@ import HoleEntry from '../components/HoleEntry.jsx';
 import BestBallHoleEntry from '../components/BestBallHoleEntry.jsx';
 import { api } from '../lib/api.js';
 import { hexToRgba } from '../lib/colors.js';
+import { formatStroke } from '../components/TeamScore.jsx';
 
 export default function Scorekeeper({ state, isScorekeeper, onLogin, onLogout }) {
   if (!isScorekeeper) return <PinGate onLogin={onLogin} />;
@@ -158,7 +159,7 @@ function MatchScoring({ state, match }) {
     );
   }
 
-  const leader = c.lead > 0 ? a : c.lead < 0 ? b : null;
+  const leader = c.aToPar < c.bToPar ? a : c.bToPar < c.aToPar ? b : null;
 
   return (
     <div className="space-y-3">
@@ -172,13 +173,13 @@ function MatchScoring({ state, match }) {
       >
         <div className="flex items-center justify-between text-[11px]">
           <div className="text-ink/55 uppercase tracking-widest">
-            Match {match.id} · {match.format.replace('_', ' ')}
+            Group {match.id} · Stroke play scramble
           </div>
           <div
             className="font-semibold"
             style={leader ? { color: leader.color } : { color: '#2c2418' }}
           >
-            {c.status} · thru {c.holesPlayed}
+            Black {formatStroke(c.aToPar)} · Crimson {formatStroke(c.bToPar)} · {c.holesPlayed}/18
           </div>
         </div>
         <div className="mt-2 grid grid-cols-2 gap-3">
@@ -201,7 +202,7 @@ function MatchScoring({ state, match }) {
 
       <div
         className="grid gap-1"
-        style={{ gridTemplateColumns: `repeat(${playOrder.length}, minmax(0, 1fr))` }}
+        style={{ gridTemplateColumns: `repeat(9, minmax(0, 1fr))` }}
       >
         {playOrder.map((holeNumber, idx) => {
           const has = holesByIndex.has(idx);
@@ -226,7 +227,7 @@ function MatchScoring({ state, match }) {
                 className="text-[10px]"
                 style={winColor ? { color: winColor, fontWeight: 700 } : { color: '#a3a39a' }}
               >
-                {winner === 'A' ? 'A' : winner === 'B' ? 'B' : winner === 'tie' ? '½' : '·'}
+                {has ? `${hole.teamAScore}/${hole.teamBScore}` : '·'}
               </div>
             </div>
           );
@@ -236,7 +237,7 @@ function MatchScoring({ state, match }) {
       {match.computed.isClosed ? (
         <div className="card p-4 text-center">
           <div className="text-fairway font-display font-semibold text-lg">
-            Match closed: {match.result}
+            Group complete: Black {formatStroke(c.aToPar)} / Crimson {formatStroke(c.bToPar)}
           </div>
           <button className="btn mt-3" onClick={undoLast} disabled={busy}>
             Undo last hole
@@ -244,7 +245,7 @@ function MatchScoring({ state, match }) {
         </div>
       ) : nextIndex == null ? (
         <div className="card p-4 text-center">
-          <div className="text-ink/75">All 9 holes scored — {match.result || c.status}</div>
+          <div className="text-ink/75">All 18 holes scored — {match.result || c.status}</div>
           <button className="btn mt-3" onClick={undoLast} disabled={busy}>
             Undo last hole
           </button>

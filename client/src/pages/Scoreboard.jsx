@@ -1,37 +1,9 @@
 import TeamScore from '../components/TeamScore.jsx';
 import MatchCard from '../components/MatchCard.jsx';
-import ActivityTicker from '../components/ActivityTicker.jsx';
-import CupOdds from '../components/CupOdds.jsx';
-
-export default function Scoreboard({ state }) {
-  const { teams, sessions, totals, tournamentFinal, activity } = state;
-
-  return (
-    <div className="space-y-5">
-      <TeamScore
-        teams={teams}
-        totals={totals}
-        matches={state.matches}
-        tournamentFinal={tournamentFinal}
-      />
-
-      <CupOdds state={state} />
-
-      <ActivityTicker activity={activity} teams={teams} />
-
-      {sessions.map((s) => (
-        <section key={s.id} className="space-y-2">
-          <div className="flex items-center gap-2 px-1">
-            <span className="ribbon">{s.name}</span>
-            <span className="flex-1 h-px bg-bunker/60" />
-          </div>
-          <div className="space-y-2">
-            {s.matches.map((m) => (
-              <MatchCard key={m.id} match={m} teams={teams} />
-            ))}
-          </div>
-        </section>
-      ))}
-    </div>
-  );
+export default function Scoreboard({state}) {
+  return <div className="space-y-4">
+    <TeamScore teams={state.teams} totals={state.totals} matches={state.matches} tournamentFinal={state.tournamentFinal}/>
+    <div className="card p-3 text-xs text-ink/65">Gross scramble stroke play. Each group records one Black and one Crimson score per hole. All five group totals count; lower combined score relative to par wins. Par 72 at Lakeside Golf Course, Lexington.</div>
+    {state.matches.map(m=><MatchCard key={m.id} match={m} teams={state.teams}/>)}
+  </div>;
 }

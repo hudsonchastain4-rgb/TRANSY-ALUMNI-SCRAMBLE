@@ -1,3 +1,11 @@
+# Transy Alumni Scramble — Lakeside Golf Course
+
+2026 tournament rules: Black vs Crimson, five 18-hole scramble groups per side. Each group records one score per side on each hole. The running leaderboard sums (strokes - actual Lakeside par) over all recorded holes in all five groups. Lower combined score at 90 holes per side wins. No match points or early closure.
+
+Official scorecard: https://content.lexingtonky.gov/sites/default/files/2024-10/Lakeside%20GC%20scorecard.pdf
+
+**Render:** Node web service, root directory blank, build `npm install`, start `npm start`. Attach a persistent disk mounted at `/var/data`, set `DB_PATH=/var/data/bbh.db` in Environment. Do not reset the database to deploy code changes. Test scoring with two devices before playing.
+
 # Transy Alumni Scramble
 
 Live tournament tracker for a team match-play golf event. Single Railway service

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db.js';
 import { getFullState } from '../lib/state.js';
+import { holeByNumber } from '../lib/course.js';
 import { isScorekeeper, isAdmin, ADMIN_PIN } from '../lib/auth.js';
 
 const router = Router();
@@ -86,7 +87,7 @@ router.get('/export', (req, res) => {
   const lines = [];
   lines.push('# Matches');
   lines.push(
-    'match_id,session,format,start_hole,status,result,team_a_points,team_b_points'
+    'match_id,session,format,start_hole,status,result,black_relative_to_par,crimson_relative_to_par'
   );
   for (const m of matches) {
     lines.push(
@@ -97,8 +98,7 @@ router.get('/export', (req, res) => {
         m.start_hole ?? '',
         m.status,
         csv(m.result ?? ''),
-        m.team_a_points,
-        m.team_b_points,
+        ...(() => { const h=holes.filter(x=>x.match_id===m.id); const par=h.reduce((sum,x)=>sum+(holeByNumber(x.hole_number)?.par||0),0); return [h.reduce((sum,x)=>sum+x.team_a_score,0)-par,h.reduce((sum,x)=>sum+x.team_b_score,0)-par]; })(),
       ].join(',')
     );
   }

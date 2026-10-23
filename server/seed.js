@@ -59,8 +59,7 @@ const TEAMS = [
   },
 ];
 
-// One scramble session: five 4-person foursome matches, 1 point each (5 total,
-// first to 3). Crimson has 19 players, so match 5 is Black 4 vs Crimson 3.
+// Five 18-hole scramble groups per team; ALL five groups count toward cumulative stroke play.
 const SESSIONS = [
   {
     name: 'Scramble',
@@ -156,7 +155,7 @@ export function factoryReset() {
   tx();
 }
 
-// One-shot startup migration to the current format: the 5-match scramble layout is
+// Legacy, manually-invoked migration ONLY (not executed at startup): the 5-match scramble layout is
 // identified by its 18-hole matches. Fires until one exists, then
 // never again.
 export function migrateToNewFormatIfNeeded() {

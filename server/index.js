@@ -4,20 +4,18 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { db } from './db.js';
-import { seedIfEmpty, migrateToNewFormatIfNeeded } from './seed.js';
+import { seedIfEmpty } from './seed.js';
 import { SESSION_SECRET } from './lib/auth.js';
 import sseRouter from './routes/sse.js';
 import tournamentRouter from './routes/tournament.js';
 import matchesRouter from './routes/matches.js';
 import playersRouter from './routes/players.js';
-import betsRouter from './routes/bets.js';
 import adminRouter from './routes/admin.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 seedIfEmpty();
-const mig = migrateToNewFormatIfNeeded();
-if (mig.migrated) console.log('Migrated: wiped all data, reseeded new 5-round format.');
+// Do not automatically reset player assignments or scores during a deployment.
 
 const app = express();
 app.use(express.json());
@@ -27,7 +25,6 @@ const api = express.Router();
 api.use('/sse', sseRouter);
 api.use('/match', matchesRouter);
 api.use('/player', playersRouter);
-api.use('/bet', betsRouter);
 api.use('/admin', adminRouter);
 api.use('/', tournamentRouter);
 app.use('/api', api);

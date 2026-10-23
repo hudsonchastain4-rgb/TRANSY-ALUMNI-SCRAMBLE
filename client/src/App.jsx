@@ -7,8 +7,8 @@ import Join from './pages/Join.jsx';
 import Scoreboard from './pages/Scoreboard.jsx';
 import Setup from './pages/Setup.jsx';
 import Scorekeeper from './pages/Scorekeeper.jsx';
-import Players from './pages/Players.jsx';
-import Picks from './pages/Picks.jsx';
+
+
 import Final from './pages/Final.jsx';
 
 export default function App() {
@@ -71,8 +71,6 @@ export default function App() {
           <Tab to="/scoreboard">Board</Tab>
           <Tab to="/setup">Setup</Tab>
           <Tab to="/score">Scorekeeper</Tab>
-          <Tab to="/players">Records</Tab>
-          <Tab to="/picks">Picks</Tab>
           {state.tournamentFinal && <Tab to="/final">Final</Tab>}
         </nav>
       </header>
@@ -104,11 +102,6 @@ export default function App() {
                 onLogout={logout}
               />
             }
-          />
-          <Route path="/players" element={<Players state={state} />} />
-          <Route
-            path="/picks"
-            element={<Picks state={state} isAdmin={isAdmin} />}
           />
           <Route path="/final" element={<Final state={state} />} />
           <Route path="*" element={<Navigate to="/scoreboard" replace />} />

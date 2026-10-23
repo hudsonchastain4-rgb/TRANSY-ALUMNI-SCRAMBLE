@@ -1,5 +1,5 @@
 import { db } from '../db.js';
-import { computeMatch, pointsFor } from './matchPlay.js';
+import { computeStrokePlay } from './strokePlay.js';
 import { COURSE, HOLES_ON_COURSE } from './course.js';
 import { payoutFor } from './odds.js';
 
@@ -13,14 +13,13 @@ export function recomputeMatch(matchId) {
 
   const suddenDeath = !!match.sudden_death;
   const holesCount = match.holes_count ?? 9;
-  const computed = computeMatch(holes, { suddenDeath, holesCount });
-  const weight = match.points_weight ?? 1;
-  const pts = pointsFor(computed, weight);
+  const computed = computeStrokePlay(holes, holesCount);
+  const pts = {a:0,b:0};
 
   let status = match.status;
   if (status === 'pending' && holes.length > 0) status = 'in_progress';
   if (computed.final) status = 'final';
-  else if (computed.isClosed) status = 'closed';
+  else if (status === 'final' || status === 'closed') status = 'in_progress';
 
   db.prepare(
     `UPDATE match
@@ -83,10 +82,7 @@ export function getFullState() {
     const holes = matchHoles.all(m.id);
     const matchSuddenDeath = !!m.sudden_death;
     const holesCount = m.holes_count ?? 9;
-    const computed = computeMatch(holes, {
-      suddenDeath: matchSuddenDeath,
-      holesCount,
-    });
+    const computed = computeStrokePlay(holes, holesCount);
     const maxHoleIndex = holes.length
       ? Math.max(...holes.map((h) => h.hole_index))
       : -1;
@@ -154,8 +150,7 @@ export function getFullState() {
   const teams = teamsRaw.map((t, i) => {
     const side = i === 0 ? 'A' : 'B';
     const totalPoints = matchOut.reduce(
-      (sum, m) => sum + (side === 'A' ? m.teamAPoints : m.teamBPoints),
-      0
+      (sum,m)=>sum+(side==='A'?m.computed.aToPar:m.computed.bToPar),0
     );
     return {
       id: t.id,
@@ -188,7 +183,7 @@ export function getFullState() {
   // No tiebreaker in this format — the cup can end tied.
   const tournamentFinal = allMatchesFinal;
 
-  const bets = buildBets(matchOut);
+  const bets = {bettors:[], bets:[]};
   const activity = buildActivity(matchOut);
 
   return {
@@ -200,6 +195,9 @@ export function getFullState() {
     sessions,
     matches: matchOut,
     totals,
+    scoringFormat: 'cumulative_stroke_play',
+    totalHolesScored:matchOut.reduce((n,m)=>n+m.computed.holesPlayed,0),
+    totalHolesExpected:matchOut.reduce((n,m)=>n+m.holesCount,0),
     totalPointsAvailable,
     allMatchesFinal,
     tournamentFinal,

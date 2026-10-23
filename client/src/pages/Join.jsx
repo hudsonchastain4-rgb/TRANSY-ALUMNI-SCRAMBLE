@@ -40,7 +40,7 @@ export default function Join({ state }) {
         </div>
         <h1 className="text-4xl font-display font-black mt-1 text-ink">Transy Alumni Scramble</h1>
         <div className="text-ink/60 text-sm mt-1 italic">
-          Team Black vs Team Crimson · 5 matches · 5 points
+          Team Black vs Team Crimson · 5 scramble groups per team · Stroke play
         </div>
       </div>
 
