@@ -10,3 +10,7 @@ On startup, the application automatically splits an existing 5-paired-group setu
 Persistent SQLite: `DB_PATH=/var/data/bbh.db` with disk mounted at `/var/data`.
 
 Render: root empty; `npm install` build; `npm start` run.
+
+
+## Open scoring
+The `/score` page allows anyone with the URL to start groups, record scores and undo the last hole without a scorekeeper PIN. The Setup screen and administrative actions still require their existing authentication; do not share administrative credentials.

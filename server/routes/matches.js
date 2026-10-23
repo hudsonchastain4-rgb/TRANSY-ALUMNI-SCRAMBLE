@@ -81,7 +81,7 @@ router.post('/:id/reset', requirePin, (req, res) => {
   res.json({ ok: true });
 });
 
-router.post('/:id/start', requirePin, (req, res) => {
+router.post('/:id/start', (req, res) => {
   const matchId = Number(req.params.id);
   const match = db.prepare('SELECT * FROM match WHERE id = ?').get(matchId);
   if (!match) return res.status(404).json({ error: 'match not found' });
@@ -99,7 +99,7 @@ router.post('/:id/start', requirePin, (req, res) => {
   res.json({ ok: true });
 });
 
-router.post('/:id/hole', requirePin, (req, res) => {
+router.post('/:id/hole', (req, res) => {
   const matchId = Number(req.params.id);
   const { holeIndex } = req.body || {};
 
@@ -205,7 +205,7 @@ router.post('/:id/hole', requirePin, (req, res) => {
   res.json({ ok: true });
 });
 
-router.delete('/:id/hole/:idx', requirePin, (req, res) => {
+router.delete('/:id/hole/:idx', (req, res) => {
   const matchId = Number(req.params.id);
   const holeIndex = Number(req.params.idx);
 

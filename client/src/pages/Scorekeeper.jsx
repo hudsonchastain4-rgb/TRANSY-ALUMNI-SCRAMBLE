@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import PinGate from './PinGate.jsx';
 import GroupHoleEntry from '../components/GroupHoleEntry.jsx';
 import BestBallHoleEntry from '../components/BestBallHoleEntry.jsx';
 import { api } from '../lib/api.js';
@@ -8,11 +7,10 @@ import { hexToRgba } from '../lib/colors.js';
 import { formatStroke } from '../components/TeamScore.jsx';
 
 export default function Scorekeeper({ state, isScorekeeper, onLogin, onLogout }) {
-  if (!isScorekeeper) return <PinGate onLogin={onLogin} />;
-  return <ScoreInner state={state} onLogout={onLogout} />;
+  return <ScoreInner state={state} />;
 }
 
-function ScoreInner({ state, onLogout }) {
+function ScoreInner({ state }) {
   const [params, setParams] = useSearchParams();
   const matchIdParam = Number(params.get('match')) || null;
 
@@ -49,7 +47,7 @@ function ScoreInner({ state, onLogout }) {
             {inProgress.length} live · {setupReady.length} ready
           </div>
         </div>
-        <button className="btn" onClick={onLogout}>Lock</button>
+        <span className="text-xs text-ink/60">Open scoring</span>
       </div>
 
       <MatchPicker matches={state.matches} value={defaultId} onChange={pick} />
